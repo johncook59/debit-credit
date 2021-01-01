@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${rds.hostname}/${rds.db_name}?stringtype=unspecified
+    username: ${rds.username}
+    password: ${rds.password}
+
+    initialization-mode: always
+
+rds:
+##
+## Safety catch! Avoid trashing a working database
+##
+## Uncomment to enable application
+#  hostname: localhost:5432
+#  username: postgres
+#  password: letmein
+#  db_name: debit_credit
+
+customer:
+  count: 1000000
+  batch: 10000

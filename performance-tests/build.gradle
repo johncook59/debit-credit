@@ -1,0 +1,11 @@
+plugins {
+  id "com.github.lkishalmi.gatling" version "3.3.4"
+}
+
+repositories {
+  jcenter()
+}
+
+dependencies {
+  compile group: 'io.gatling', name: 'gatling-core', version: '3.3.1'
+}

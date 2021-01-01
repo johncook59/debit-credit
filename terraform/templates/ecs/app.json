@@ -1,0 +1,41 @@
+[
+  {
+    "name": "${app_name}",
+    "image": "${app_image}",
+    "cpu": ${fargate_cpu},
+    "memory": ${fargate_memory},
+    "networkMode": "awsvpc",
+    "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "${logs_group}",
+          "awslogs-region": "${aws_region}",
+          "awslogs-stream-prefix": "ecs"
+        }
+    },
+    "portMappings": [
+      {
+        "containerPort": ${app_port},
+        "hostPort": ${app_port}
+      }
+    ],
+    "environment": [
+      {
+         "name": "rds.username",
+         "value": "${db_username}"
+      },
+      {
+         "name": "rds.hostname",
+         "value": "${db_hostname}"
+      },
+      {
+         "name": "rds.password",
+         "value": "${db_password}"
+      },
+      {
+	 "name": "rds.db.name",
+         "value": "${db_name}"
+      }	 
+    ]
+  }
+]
