@@ -1,37 +1,27 @@
 package zarg.debitcredit.controllers;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import zarg.debitcredit.domain.Transaction;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Getter
-@NoArgsConstructor
-public class TransactionDetails {
+public record TransactionDetails(
+        String id,
+        String direction,
+        BigDecimal amount,
+        BigDecimal balance,
+        String userId,
+        String accountId,
+        LocalDateTime processed) {
 
     public TransactionDetails(Transaction transaction) {
-        id = transaction.getBid();
-        direction = transaction.getDirection().name();
-        amount = transaction.getAmount();
-        userId = transaction.getUserBid();
-        balance = transaction.getBalance();
-        accountId = transaction.getAccountBid();
-        processed = transaction.getProcessed();
+        this(
+                transaction.getBid(),
+                transaction.getDirection().name(),
+                transaction.getAmount(),
+                transaction.getBalance(),
+                transaction.getUserBid(),
+                transaction.getAccountBid(),
+                transaction.getProcessed());
     }
-
-    private String id;
-
-    private String direction;
-
-    private BigDecimal amount;
-
-    private BigDecimal balance;
-
-    private String userId;
-
-    private String accountId;
-
-    private LocalDateTime processed;
 }

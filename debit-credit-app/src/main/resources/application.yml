@@ -11,16 +11,12 @@ spring:
     open-in-view: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        show_sql: false
+        use_sql_comments: true
+        format_sql: true
 
 rds:
   hostname: localhost:5432
   username: postgres
   password: letmein
   db_name: debit_credit
-
-#    properties:
-#      hibernate:
-#        show_sql: true
-#        use_sql_comments: true
-#        format_sql: true

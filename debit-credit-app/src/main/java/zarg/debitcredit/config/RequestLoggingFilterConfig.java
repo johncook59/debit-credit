@@ -5,10 +5,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
 @Configuration
-public class RequestLoggingFilterConfig {
+class RequestLoggingFilterConfig {
 
     @Bean
-    public CommonsRequestLoggingFilter logFilter() {
+    CommonsRequestLoggingFilter logFilter() {
         CommonsRequestLoggingFilter filter
                 = new CommonsRequestLoggingFilter();
         filter.setIncludeQueryString(true);

@@ -35,7 +35,7 @@ public class CustomerController {
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public CustomerDetails register(@RequestBody RegisterCustomerRequest request) {
-        log.info("Registering {} {}", request.getGivenName(), request.getSurname());
+        log.info("Registering {} {}", request.givenName(), request.surname());
 
         return new CustomerDetails(customerService.registerCustomer(request));
     }

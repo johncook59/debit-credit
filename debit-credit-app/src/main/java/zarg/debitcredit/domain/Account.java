@@ -1,20 +1,22 @@
 package zarg.debitcredit.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
+import org.hibernate.generator.EventType;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.Table;
-import javax.persistence.Version;
 import java.math.BigDecimal;
 
 @Entity
@@ -27,12 +29,14 @@ public class Account {
 
     @Id
     @Column(name = "id", columnDefinition = "serial", nullable = false, updatable = false)
-    @GeneratedValue
+    @SequenceGenerator(name = "account_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
     @Column(name = "bid", length = 12, updatable = false, insertable = false)
-    @ColumnDefault("concat('A', lpad(nextval('hibernate_sequence'::regclass)::text, 8, '0'))")
-    @Generated(GenerationTime.INSERT)
+    @SequenceGenerator(name = "account_bid_seq", allocationSize = 1)
+    @ColumnDefault("concat('A', lpad(nextval('account_bid_seq'::regclass)::text, 8, '0'))")
+    @Generated(event = EventType.INSERT)
     private String bid;
 
     @Version

@@ -1,9 +1,9 @@
 package zarg.debitcredit.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import zarg.debitcredit.dao.AccountDao;
@@ -18,7 +18,6 @@ import zarg.debitcredit.events.CreditFailedEvent;
 import zarg.debitcredit.events.DebitEvent;
 import zarg.debitcredit.events.DebitFailedEvent;
 
-import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -32,6 +31,10 @@ import static zarg.debitcredit.domain.TransactionDirection.DEBIT;
 @Service
 class DefaultTellerService implements TellerService {
 
+    private static final String FAILED_TO_FIND_ACCOUNT = "Failed to find account %s";
+    private static final String FAILED_TO_FIND_CUSTOMER = "Failed to find customer %s";
+    private static final String FAILED_TO_FIND_OR_LOCK_ACCOUNT = "Failed to find or lock account %s";
+    private static final String ACCOUNT_FOR_CUSTOMER_NOT_FOUND = "Account %s for customer %s not found";
     private final AccountAccessControlService accountAccessControlService;
     private final CustomerDao customerDao;
     private final AccountDao accountDao;
@@ -55,10 +58,12 @@ class DefaultTellerService implements TellerService {
     public Transaction credit(String customerId, String accountId, BigDecimal amount) {
         try {
             Account account = accountDao.findAndLockByBid(accountId)
-                    .orElseThrow(() -> new EntityNotFoundException(accountId));
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            FAILED_TO_FIND_OR_LOCK_ACCOUNT.formatted(accountId)));
 
             if (!accountAccessControlService.canCredit(customerId, account)) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, accountId);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        ACCOUNT_FOR_CUSTOMER_NOT_FOUND.formatted(accountId, customerId));
             }
 
             Transaction transaction = updateBalance(customerId, account, amount, CREDIT);
@@ -76,11 +81,12 @@ class DefaultTellerService implements TellerService {
     public Transaction debit(String customerId, String accountId, BigDecimal amount) {
         try {
             Account account = accountDao.findAndLockByBid(accountId)
-                    .orElseThrow(() -> new EntityNotFoundException(accountId));
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            FAILED_TO_FIND_OR_LOCK_ACCOUNT.formatted(accountId)));
 
             if (!accountAccessControlService.canDebit(customerId, account)) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, accountId);
-            }
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        ACCOUNT_FOR_CUSTOMER_NOT_FOUND.formatted(accountId, customerId));            }
 
             Transaction transaction = updateBalance(customerId, account, amount, DEBIT);
             publisher.publishEvent(new DebitEvent(customerId, accountId, amount));
@@ -96,11 +102,12 @@ class DefaultTellerService implements TellerService {
     @Override
     public BigDecimal balance(String customerId, String accountId) {
         Account account = accountDao.findByBid(accountId)
-                .orElseThrow(() -> new EntityNotFoundException(accountId));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        FAILED_TO_FIND_ACCOUNT.formatted(accountId)));
 
         if (!accountAccessControlService.canReadBalance(customerId, account)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, accountId);
-        }
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    ACCOUNT_FOR_CUSTOMER_NOT_FOUND.formatted(accountId, customerId));        }
 
         return account.getBalance();
     }
@@ -109,7 +116,7 @@ class DefaultTellerService implements TellerService {
     @Transactional(readOnly = true)
     public Map<String, List<Transaction>> findTransactions(String customerId, LocalDateTime from, LocalDateTime to) {
         Customer customer = customerDao.findByBid(customerId)
-                .orElseThrow(() -> new EntityNotFoundException(customerId));
+                .orElseThrow(() -> new EntityNotFoundException(FAILED_TO_FIND_CUSTOMER.formatted(customerId)));
 
         return customer.getAccounts().stream()
                 .collect(Collectors.toMap(Account::getBid,

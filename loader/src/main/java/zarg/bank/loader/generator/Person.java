@@ -1,24 +1,9 @@
 package zarg.bank.loader.generator;
 
-import lombok.Getter;
-import lombok.ToString;
-
-@Getter
-@ToString
-class Person {
-    private final String givenName;
-    private final String surname;
-    private final String emailAddress;
-
-    private Person(Builder builder) {
-        givenName = builder.givenName;
-        surname = builder.surname;
-        emailAddress = builder.emailAddress;
-    }
-
-    public static Builder builder() {
-        return new Builder();
-    }
+public record Person(
+    String givenName,
+    String surname,
+    String emailAddress) {
 
     public static final class Builder {
         private String givenName;
@@ -26,6 +11,10 @@ class Person {
         private String emailAddress;
 
         private Builder() {
+        }
+
+        public static Builder builder() {
+            return new Builder();
         }
 
         public Builder givenName(String givenName) {
@@ -44,7 +33,7 @@ class Person {
         }
 
         public Person build() {
-            return new Person(this);
+            return new Person(givenName, surname, emailAddress);
         }
     }
 }

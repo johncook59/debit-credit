@@ -1,5 +1,6 @@
 package zarg.debitcredit.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,11 +10,12 @@ import zarg.debitcredit.dao.CustomerDao;
 import zarg.debitcredit.domain.Account;
 import zarg.debitcredit.domain.Customer;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.Collections;
+import java.util.List;
 
 @Service
 class DefaultCustomerService implements CustomerService {
+
+    private static final String FAILED_TO_FIND_CUSTOMER = "Failed to find customer %s";
 
     private final CustomerDao customerDao;
 
@@ -26,15 +28,15 @@ class DefaultCustomerService implements CustomerService {
     public Customer registerCustomer(RegisterCustomerRequest request) {
 
         Account account = Account.builder()
-                .balance(request.getInitialBalance())
+                .balance(request.initialBalance())
                 .name("Current")
                 .build();
         Customer customer = Customer.builder()
-                .givenName(request.getGivenName())
-                .surname(request.getSurname())
-                .emailAddress(request.getEmailAddress())
-                .password(request.getPassword())
-                .accounts(Collections.singletonList(account))
+                .givenName(request.givenName())
+                .surname(request.surname())
+                .emailAddress(request.emailAddress())
+                .password(request.password())
+                .accounts(List.of(account))
                 .build();
 
         return customerDao.save(customer);
@@ -43,7 +45,7 @@ class DefaultCustomerService implements CustomerService {
     @Transactional(readOnly = true)
     public CustomerDetails findCustomerByBid(String customerBid) {
         return new CustomerDetails(customerDao.findByBid(customerBid)
-                .orElseThrow(() -> new EntityNotFoundException(customerBid)));
+                .orElseThrow(() -> new EntityNotFoundException(FAILED_TO_FIND_CUSTOMER.formatted(customerBid))));
     }
 
     @Override

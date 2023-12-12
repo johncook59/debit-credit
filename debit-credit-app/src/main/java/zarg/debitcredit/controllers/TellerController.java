@@ -17,7 +17,6 @@ import zarg.debitcredit.service.TellerService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -45,10 +44,10 @@ class TellerController {
     @PutMapping(value = "/{customerId}/credit")
     @ResponseBody
     public TransactionDetails credit(@PathVariable("customerId") String customerId, @RequestBody CreditAccountRequest request) {
-        log.debug("Requesting {} credit to account {}", request.getAmount(), request.getAccountId());
-        validateAmount(request.getAmount());
+        log.debug("Requesting {} credit to account {}", request.amount(), request.accountId());
+        validateAmount(request.amount());
 
-        return new TransactionDetails(teller.credit(customerId, request.getAccountId(), request.getAmount()));
+        return new TransactionDetails(teller.credit(customerId, request.accountId(), request.amount()));
     }
 
     @PutMapping(value = "/{customerId}/{accountId}/debit")
@@ -56,10 +55,10 @@ class TellerController {
     public TransactionDetails debit(@PathVariable("customerId") String customerId,
                                     @PathVariable("accountId") String accountId,
                                     @RequestBody DebitAccountRequest request) {
-        log.debug("Requesting {} debit from account {}", request.getAmount(), accountId);
-        validateAmount(request.getAmount());
+        log.debug("Requesting {} debit from account {}", request.amount(), accountId);
+        validateAmount(request.amount());
 
-        return new TransactionDetails(teller.debit(customerId, accountId, request.getAmount()));
+        return new TransactionDetails(teller.debit(customerId, accountId, request.amount()));
     }
 
     @GetMapping(value = "/{customerId}/transactions", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -69,7 +68,7 @@ class TellerController {
                                                               @RequestParam(name = "to", required = false) @DateTimeFormat(pattern = DATE_TIME_FORMAT) LocalDateTime to) {
 
         if (from == null) {
-            from = LocalDateTime.now(ZoneOffset.UTC).minus(1, ChronoUnit.DAYS);
+            from = LocalDateTime.now(ZoneOffset.UTC).minusDays(1);
         }
 
         if (to == null) {
@@ -84,7 +83,7 @@ class TellerController {
                         Map.Entry::getKey,
                         e -> e.getValue().stream()
                                 .map(TransactionDetails::new)
-                                .collect(Collectors.toList())));
+                                .toList()));
     }
 
     private void validateAmount(BigDecimal amount) {
