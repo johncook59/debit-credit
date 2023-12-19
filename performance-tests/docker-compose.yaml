@@ -1,0 +1,56 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    ports:
+      - "5432:5432"
+    expose:
+      - "5432"
+    volumes:
+      - ~/apps/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=letmein
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=debit_credit
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  debit-credit:
+    image: debit-credit-app:latest
+    expose:
+      - "8080"
+    deploy:
+      mode: replicated
+      replicas: 4
+      endpoint_mode: vip
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    healthcheck:
+      test: "curl --fail --silent localhost:8080/actuator/health | grep UP || exit 1"
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./src/test/resources/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - debit-credit
+    ports:
+      - "8000:8000"
+
+networks:
+  default:
+    driver: bridge
+    name: debit_credit
