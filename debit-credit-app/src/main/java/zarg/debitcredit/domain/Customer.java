@@ -16,10 +16,6 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
@@ -33,10 +29,6 @@ import java.util.List;
                 @Index(name = "idx_customer_bid", columnList = "bid"),
                 @Index(name = "idx_customer_email_address", columnList = "email_address")
         })
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Customer {
 
     @Id
@@ -52,7 +44,6 @@ public class Customer {
     private String bid;
 
     @Version
-    @Builder.Default
     private int version = 0;
 
     @Column(length = 20, nullable = false)
@@ -74,4 +65,108 @@ public class Customer {
             inverseJoinColumns = @JoinColumn(name = "account_id", referencedColumnName = "id"),
             inverseForeignKey = @ForeignKey(name = "fk_account_id_customer_account"))
     private List<Account> accounts;
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getBid() {
+        return bid;
+    }
+
+    public int getVersion() {
+        return version;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getGivenName() {
+        return givenName;
+    }
+
+    public String getSurname() {
+        return surname;
+    }
+
+    public String getEmailAddress() {
+        return emailAddress;
+    }
+
+    public List<Account> getAccounts() {
+        return accounts;
+    }
+
+
+    public static final class Builder {
+        private Long id;
+        private String bid;
+        private int version;
+        private String password;
+        private String givenName;
+        private String surname;
+        private String emailAddress;
+        private List<Account> accounts;
+
+        private Builder() {
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public Builder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder bid(String bid) {
+            this.bid = bid;
+            return this;
+        }
+
+        public Builder version(int version) {
+            this.version = version;
+            return this;
+        }
+
+        public Builder password(String password) {
+            this.password = password;
+            return this;
+        }
+
+        public Builder givenName(String givenName) {
+            this.givenName = givenName;
+            return this;
+        }
+
+        public Builder surname(String surname) {
+            this.surname = surname;
+            return this;
+        }
+
+        public Builder emailAddress(String emailAddress) {
+            this.emailAddress = emailAddress;
+            return this;
+        }
+
+        public Builder accounts(List<Account> accounts) {
+            this.accounts = accounts;
+            return this;
+        }
+
+        public Customer build() {
+            Customer customer = new Customer();
+            customer.givenName = this.givenName;
+            customer.emailAddress = this.emailAddress;
+            customer.bid = this.bid;
+            customer.accounts = this.accounts;
+            customer.surname = this.surname;
+            customer.password = this.password;
+            customer.id = this.id;
+            customer.version = this.version;
+            return customer;
+        }
+    }
 }

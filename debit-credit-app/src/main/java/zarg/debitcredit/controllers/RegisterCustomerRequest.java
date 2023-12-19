@@ -8,41 +8,42 @@ public record RegisterCustomerRequest(
         String emailAddress,
         String password,
         BigDecimal initialBalance) {
-    public static final class RegisterCustomerRequestBuilder {
+
+    public static final class Builder {
         private String givenName;
         private String surname;
         private String emailAddress;
         private String password;
         private BigDecimal initialBalance;
 
-        private RegisterCustomerRequestBuilder() {
+        private Builder() {
         }
 
-        public static RegisterCustomerRequestBuilder builder() {
-            return new RegisterCustomerRequestBuilder();
+        public static Builder builder() {
+            return new Builder();
         }
 
-        public RegisterCustomerRequestBuilder givenName(String givenName) {
+        public Builder givenName(String givenName) {
             this.givenName = givenName;
             return this;
         }
 
-        public RegisterCustomerRequestBuilder surname(String surname) {
+        public Builder surname(String surname) {
             this.surname = surname;
             return this;
         }
 
-        public RegisterCustomerRequestBuilder emailAddress(String emailAddress) {
+        public Builder emailAddress(String emailAddress) {
             this.emailAddress = emailAddress;
             return this;
         }
 
-        public RegisterCustomerRequestBuilder password(String password) {
+        public Builder password(String password) {
             this.password = password;
             return this;
         }
 
-        public RegisterCustomerRequestBuilder initialBalance(BigDecimal initialBalance) {
+        public Builder initialBalance(BigDecimal initialBalance) {
             this.initialBalance = initialBalance;
             return this;
         }

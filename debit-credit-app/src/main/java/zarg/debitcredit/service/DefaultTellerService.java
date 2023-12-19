@@ -86,7 +86,8 @@ class DefaultTellerService implements TellerService {
 
             if (!accountAccessControlService.canDebit(customerId, account)) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        ACCOUNT_FOR_CUSTOMER_NOT_FOUND.formatted(accountId, customerId));            }
+                        ACCOUNT_FOR_CUSTOMER_NOT_FOUND.formatted(accountId, customerId));
+            }
 
             Transaction transaction = updateBalance(customerId, account, amount, DEBIT);
             publisher.publishEvent(new DebitEvent(customerId, accountId, amount));
@@ -107,7 +108,8 @@ class DefaultTellerService implements TellerService {
 
         if (!accountAccessControlService.canReadBalance(customerId, account)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    ACCOUNT_FOR_CUSTOMER_NOT_FOUND.formatted(accountId, customerId));        }
+                    ACCOUNT_FOR_CUSTOMER_NOT_FOUND.formatted(accountId, customerId));
+        }
 
         return account.getBalance();
     }
@@ -127,7 +129,7 @@ class DefaultTellerService implements TellerService {
         account.setBalance(account.getBalance().add(direction == CREDIT ? amount : amount.negate()));
         accountDao.save(account);
 
-        Transaction transaction = Transaction.builder()
+        Transaction transaction = Transaction.Builder.builder()
                 .accountBid(account.getBid())
                 .userBid(customerId)
                 .amount(amount)

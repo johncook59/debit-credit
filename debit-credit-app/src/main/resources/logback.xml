@@ -10,15 +10,10 @@
         </layout>
     </appender>
 
-    <logger name="org.springframework.web.filter.CommonsRequestLoggingFilter">
-        <level value="INFO" />
-    </logger>
-
-    <logger name="org.springframework.web" level="INFO" />
-
+    <logger name="org.springframework.web" level="WARN"/>
 
     <root level="INFO">
-        <appender-ref ref="Console" />
+        <appender-ref ref="Console"/>
     </root>
 
 </configuration>

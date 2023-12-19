@@ -1,5 +1,6 @@
 package zarg.debitcredit.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
@@ -8,6 +9,7 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter;
 class RequestLoggingFilterConfig {
 
     @Bean
+    @ConditionalOnProperty(name = "log.requests", havingValue = "true")
     CommonsRequestLoggingFilter logFilter() {
         CommonsRequestLoggingFilter filter
                 = new CommonsRequestLoggingFilter();

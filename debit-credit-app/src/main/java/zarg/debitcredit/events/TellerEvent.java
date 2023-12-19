@@ -1,12 +1,7 @@
 package zarg.debitcredit.events;
 
-import lombok.Getter;
-import lombok.ToString;
-
 import java.time.Instant;
 
-@Getter
-@ToString
 public abstract class TellerEvent {
     private final String customerId;
     private final String accountId;
@@ -18,5 +13,21 @@ public abstract class TellerEvent {
         this.accountId = accountId;
         this.message = message;
         this.timestamp = Instant.now();
+    }
+
+    public String getCustomerId() {
+        return customerId;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public Instant getTimestamp() {
+        return timestamp;
     }
 }

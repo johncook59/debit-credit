@@ -11,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -47,10 +46,9 @@ class CustomerControllerTest {
     public void setUp() throws Exception {
         String request = String.format(REGISTER_CUSTOMER_REQUEST, "the", "customer", "email" + random.nextInt(1000) + "@somewhere.com");
         MvcResult result = this.mvc.perform(MockMvcRequestBuilders.post("/customer")
-                .content(request)
-                .contentType(MediaType.APPLICATION_JSON))
+                        .content(request)
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
                 .andReturn();
         customer = objectMapper.readValue(result.getResponse().getContentAsString(), CustomerDetails.class);
     }
@@ -58,16 +56,8 @@ class CustomerControllerTest {
     @Test
     public void findByCustomerId() throws Exception {
         this.mvc.perform(MockMvcRequestBuilders.get("/customer")
-                .param("customerId", customer.bid())
-                .accept(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print());
+                        .param("customerId", customer.bid())
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk());
     }
-
-//    @Test
-//    public void health() throws Exception {
-//        this.mvc.perform(MockMvcRequestBuilders.get("/actuator/health"))
-//                .andExpect(MockMvcResultMatchers.status().isOk())
-//                .andDo(MockMvcResultHandlers.print());
-//    }
 }

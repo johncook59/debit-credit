@@ -20,9 +20,9 @@ public class ControllerTestUtils {
             """;
 
     public static final String CREDIT_REQUEST = """
-                {
-                    "accountId": "%s",
-                    "amount": 1.00}"
-                }
-                """;
+            {
+                "accountId": "%s",
+                "amount": 1.00}"
+            }
+            """;
 }

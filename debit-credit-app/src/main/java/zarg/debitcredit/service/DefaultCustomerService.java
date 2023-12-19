@@ -27,11 +27,11 @@ class DefaultCustomerService implements CustomerService {
     @Override
     public Customer registerCustomer(RegisterCustomerRequest request) {
 
-        Account account = Account.builder()
+        Account account = Account.Builder.builder()
                 .balance(request.initialBalance())
                 .name("Current")
                 .build();
-        Customer customer = Customer.builder()
+        Customer customer = Customer.Builder.builder()
                 .givenName(request.givenName())
                 .surname(request.surname())
                 .emailAddress(request.emailAddress())

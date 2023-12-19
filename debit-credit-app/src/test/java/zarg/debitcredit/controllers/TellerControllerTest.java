@@ -5,13 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -34,7 +34,7 @@ import static zarg.debitcredit.controllers.ControllerTestUtils.OWNER;
 import static zarg.debitcredit.controllers.ControllerTestUtils.REGISTER_CUSTOMER_REQUEST;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @Testcontainers
 class TellerControllerTest {
 
@@ -44,6 +44,8 @@ class TellerControllerTest {
             "postgres:15-alpine")
             .withDatabaseName("debit_credit")
             .withInitScript("prereq-sequences.sql");
+
+    private final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
     @Autowired
     private MockMvc mvc;
@@ -59,7 +61,6 @@ class TellerControllerTest {
         MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get("/teller/%s/%s/balance"
                         .formatted(customer.bid(), customer.accounts().getFirst())))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
         BalanceDetails balanceDetails = objectMapper.readValue(result.getResponse().getContentAsString(), BalanceDetails.class);
@@ -73,8 +74,7 @@ class TellerControllerTest {
         CustomerDetails mal = createCustomer(NOT_OWNER);
         this.mvc.perform(MockMvcRequestBuilders.get("/teller/%s/%s/balance"
                         .formatted(mal.bid(), owner.accounts().getFirst())))
-                .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andDo(MockMvcResultHandlers.print());
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
@@ -86,7 +86,6 @@ class TellerControllerTest {
                         .content(request)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
         TransactionDetails transactionDetails = objectMapper.readValue(result.getResponse().getContentAsString(), TransactionDetails.class);
@@ -108,7 +107,6 @@ class TellerControllerTest {
                         .content(request)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
         TransactionDetails transactionDetails = objectMapper.readValue(result.getResponse().getContentAsString(), TransactionDetails.class);
@@ -128,7 +126,6 @@ class TellerControllerTest {
                         .content(DEBIT_REQUEST)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
         TransactionDetails transactionDetails = objectMapper.readValue(result.getResponse().getContentAsString(), TransactionDetails.class);
@@ -148,8 +145,7 @@ class TellerControllerTest {
                                 .formatted(mal.bid(), owner.accounts().getFirst()))
                         .content(DEBIT_REQUEST)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andDo(MockMvcResultHandlers.print());
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
@@ -161,16 +157,43 @@ class TellerControllerTest {
                         .content(request)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
         MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get("/teller/" + owner.bid() + "/transactions")
-                        .param("from", dateTimeFormatter.format(now.minusDays(1)))
-                        .param("to", dateTimeFormatter.format(now)))
+                        .param("from", DATE_TIME_FORMATTER.format(now.minusDays(1)))
+                        .param("to", DATE_TIME_FORMATTER.format(now)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        Map<String, List<TransactionDetails>> transactions = objectMapper.readValue(result.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                });
+
+        String expectedAccountId = owner.accounts().getFirst();
+
+        assertThat(transactions.size()).isEqualTo(1);
+        assertThat(transactions.get(expectedAccountId).size()).isEqualTo(1);
+        assertThat(transactions.get(expectedAccountId).getFirst().userId()).isEqualTo(owner.bid());
+        assertThat(transactions.get(expectedAccountId).getFirst().balance()).isEqualTo(new BigDecimal("11.00"));
+        assertThat(transactions.get(expectedAccountId).getFirst().amount()).isEqualTo(new BigDecimal("1.00"));
+        assertThat(transactions.get(expectedAccountId).getFirst().balance()).isEqualTo(new BigDecimal("11.00"));
+        assertThat(transactions.get(expectedAccountId).getFirst().direction()).isEqualTo(TransactionDirection.CREDIT.name());
+    }
+
+    @Test
+    public void shouldFindAllTransactions() throws Exception {
+        CustomerDetails owner = createCustomer(OWNER);
+        String request = CREDIT_REQUEST.formatted(owner.accounts().getFirst());
+        this.mvc.perform(MockMvcRequestBuilders.put(
+                                String.format("/teller/%s/credit", owner.bid()))
+                        .content(request)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get("/teller/" + owner.bid() + "/transactions"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
 
         Map<String, List<TransactionDetails>> transactions = objectMapper.readValue(result.getResponse().getContentAsString(),
@@ -194,7 +217,6 @@ class TellerControllerTest {
                         .content(request)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(MockMvcResultHandlers.print())
                 .andReturn();
         return objectMapper.readValue(result.getResponse().getContentAsString(), CustomerDetails.class);
     }

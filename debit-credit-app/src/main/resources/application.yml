@@ -20,3 +20,6 @@ rds:
   username: postgres
   password: letmein
   db_name: debit_credit
+
+log:
+  requests: true

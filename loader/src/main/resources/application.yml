@@ -12,10 +12,10 @@ rds:
 ## Safety catch! Avoid trashing a working database
 ##
 ## Uncomment to enable application
-  hostname: localhost:5432
-  username: postgres
-  password: letmein
-  db_name: debit_credit
+#  hostname: localhost:5432
+#  username: postgres
+#  password: letmein
+#  db_name: debit_credit
 
 customer:
   count: 1000000

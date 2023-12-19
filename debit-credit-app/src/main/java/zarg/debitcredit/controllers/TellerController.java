@@ -1,6 +1,7 @@
 package zarg.debitcredit.controllers;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
@@ -23,8 +24,9 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/teller")
-@Slf4j
 class TellerController {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS";
 

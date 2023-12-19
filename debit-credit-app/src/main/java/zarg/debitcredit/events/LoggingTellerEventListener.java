@@ -1,17 +1,19 @@
 package zarg.debitcredit.events;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
-@Slf4j
 class LoggingTellerEventListener {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     void handleCommittedEvent(TellerEvent event) {
-        log.debug("Committed {}", event);
+        log.info("Committed {}", event);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
