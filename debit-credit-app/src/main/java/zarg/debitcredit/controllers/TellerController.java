@@ -36,38 +36,35 @@ class TellerController {
         this.teller = teller;
     }
 
-    @GetMapping(value = "/{customerId}/{accountId}/balance")
+    @GetMapping(value = "/{customerId}/{accountId}")
     @ResponseBody
-    public BalanceDetails balance(@PathVariable("customerId") String customerId, @PathVariable("accountId") String accountBid) {
-        log.debug("Requesting balance for account {}", accountBid);
-        return new BalanceDetails(accountBid, teller.balance(customerId, accountBid));
+    public BalanceDetails balance(@PathVariable("customerId") String customerBid,
+                                  @PathVariable("accountId") String accountBid) {
+        log.debug("Requesting balance by {} for account {}", customerBid, accountBid);
+        return new BalanceDetails(accountBid, teller.balance(customerBid, accountBid));
     }
 
-    @PutMapping(value = "/{customerId}/credit")
+    @PutMapping(value = "/{customerId}/{accountId}")
     @ResponseBody
-    public TransactionDetails credit(@PathVariable("customerId") String customerId, @RequestBody CreditAccountRequest request) {
-        log.debug("Requesting {} credit to account {}", request.amount(), request.accountId());
+    public TransactionDetails tellerTransaction(@PathVariable("customerId") String customerBid,
+                                                @PathVariable("accountId") String accountBid,
+                                                @RequestBody TellerRequest request) {
+        log.debug("Requesting {} {} by {} from account {}", request.type(),
+                request.amount(), customerBid, accountBid);
         validateAmount(request.amount());
 
-        return new TransactionDetails(teller.credit(customerId, request.accountId(), request.amount()));
-    }
-
-    @PutMapping(value = "/{customerId}/{accountId}/debit")
-    @ResponseBody
-    public TransactionDetails debit(@PathVariable("customerId") String customerId,
-                                    @PathVariable("accountId") String accountId,
-                                    @RequestBody DebitAccountRequest request) {
-        log.debug("Requesting {} debit from account {}", request.amount(), accountId);
-        validateAmount(request.amount());
-
-        return new TransactionDetails(teller.debit(customerId, accountId, request.amount()));
+        return new TransactionDetails(switch (request.type()) {
+            case DEBIT -> teller.debit(customerBid, accountBid, request.amount());
+            case CREDIT -> teller.credit(customerBid, accountBid, request.amount());
+        });
     }
 
     @GetMapping(value = "/{customerId}/transactions", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public Map<String, List<TransactionDetails>> transactions(@PathVariable("customerId") String customerId,
-                                                              @RequestParam(name = "from", required = false) @DateTimeFormat(pattern = DATE_TIME_FORMAT) LocalDateTime from,
-                                                              @RequestParam(name = "to", required = false) @DateTimeFormat(pattern = DATE_TIME_FORMAT) LocalDateTime to) {
+    public Map<String, List<TransactionDetails>> transactionHistory(
+            @PathVariable("customerId") String customerBid,
+            @RequestParam(name = "from", required = false) @DateTimeFormat(pattern = DATE_TIME_FORMAT) LocalDateTime from,
+            @RequestParam(name = "to", required = false) @DateTimeFormat(pattern = DATE_TIME_FORMAT) LocalDateTime to) {
 
         if (from == null) {
             from = LocalDateTime.now(ZoneOffset.UTC).minusDays(1);
@@ -77,9 +74,9 @@ class TellerController {
             to = LocalDateTime.now(ZoneOffset.UTC);
         }
 
-        log.info("Finding transactions for {} from {}, to {}", customerId, from, to);
+        log.info("Finding transactions for {} from {}, to {}", customerBid, from, to);
 
-        return teller.findTransactions(customerId, from, to)
+        return teller.findTransactions(customerBid, from, to)
                 .entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,

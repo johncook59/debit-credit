@@ -15,14 +15,15 @@ public class ControllerTestUtils {
 
     public static final String DEBIT_REQUEST = """
             {
-                "amount": 1.00
+                "amount": 1.00,
+                "type": "DEBIT"
             }
             """;
 
     public static final String CREDIT_REQUEST = """
             {
-                "accountId": "%s",
-                "amount": 1.00}"
+                "amount": 1.00,
+                "type": "CREDIT"
             }
             """;
 }

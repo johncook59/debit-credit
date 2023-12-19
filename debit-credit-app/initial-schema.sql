@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS public.transaction
     amount numeric(19,2) NOT NULL,
     balance numeric(19,2) NOT NULL,
     bid character varying(12) COLLATE pg_catalog."default" DEFAULT concat('T', lpad((nextval('transaction_bid_seq'::regclass))::text, 10, '0'::text)),
-    direction character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    type character varying(255) COLLATE pg_catalog."default" NOT NULL,
     processed_dt timestamp with time zone,
     user_bid character varying(12) COLLATE pg_catalog."default" NOT NULL,
     version integer NOT NULL,

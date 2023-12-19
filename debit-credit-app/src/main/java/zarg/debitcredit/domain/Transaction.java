@@ -43,8 +43,8 @@ public class Transaction {
     private int version = 0;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "direction", nullable = false)
-    public TransactionDirection direction;
+    @Column(name = "type", nullable = false)
+    public TransactionType type;
 
     @Column(nullable = false)
     private BigDecimal amount;
@@ -74,8 +74,8 @@ public class Transaction {
         return version;
     }
 
-    public TransactionDirection getDirection() {
-        return direction;
+    public TransactionType getType() {
+        return type;
     }
 
     public BigDecimal getAmount() {
@@ -100,7 +100,7 @@ public class Transaction {
         private String bid;
         private String userBid;
         private int version;
-        private TransactionDirection direction;
+        private TransactionType type;
         private BigDecimal amount;
         private BigDecimal balance;
         private String accountBid;
@@ -133,8 +133,8 @@ public class Transaction {
             return this;
         }
 
-        public Builder direction(TransactionDirection direction) {
-            this.direction = direction;
+        public Builder type(TransactionType type) {
+            this.type = type;
             return this;
         }
 
@@ -166,7 +166,7 @@ public class Transaction {
             transaction.processed = this.processed;
             transaction.accountBid = this.accountBid;
             transaction.version = this.version;
-            transaction.direction = this.direction;
+            transaction.type = this.type;
             transaction.bid = this.bid;
             transaction.balance = this.balance;
             return transaction;

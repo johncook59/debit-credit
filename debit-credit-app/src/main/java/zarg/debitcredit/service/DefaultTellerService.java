@@ -12,7 +12,7 @@ import zarg.debitcredit.dao.TransactionDao;
 import zarg.debitcredit.domain.Account;
 import zarg.debitcredit.domain.Customer;
 import zarg.debitcredit.domain.Transaction;
-import zarg.debitcredit.domain.TransactionDirection;
+import zarg.debitcredit.domain.TransactionType;
 import zarg.debitcredit.events.CreditEvent;
 import zarg.debitcredit.events.CreditFailedEvent;
 import zarg.debitcredit.events.DebitEvent;
@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static zarg.debitcredit.domain.TransactionDirection.CREDIT;
-import static zarg.debitcredit.domain.TransactionDirection.DEBIT;
+import static zarg.debitcredit.domain.TransactionType.CREDIT;
+import static zarg.debitcredit.domain.TransactionType.DEBIT;
 
 @Service
 class DefaultTellerService implements TellerService {
@@ -55,60 +55,60 @@ class DefaultTellerService implements TellerService {
 
     @Transactional
     @Override
-    public Transaction credit(String customerId, String accountId, BigDecimal amount) {
+    public Transaction credit(String customerBid, String accountBid, BigDecimal amount) {
         try {
-            Account account = accountDao.findAndLockByBid(accountId)
+            Account account = accountDao.findAndLockByBid(accountBid)
                     .orElseThrow(() -> new EntityNotFoundException(
-                            FAILED_TO_FIND_OR_LOCK_ACCOUNT.formatted(accountId)));
+                            FAILED_TO_FIND_OR_LOCK_ACCOUNT.formatted(accountBid)));
 
-            if (!accountAccessControlService.canCredit(customerId, account)) {
+            if (!accountAccessControlService.canCredit(customerBid, account)) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        ACCOUNT_FOR_CUSTOMER_NOT_FOUND.formatted(accountId, customerId));
+                        ACCOUNT_FOR_CUSTOMER_NOT_FOUND.formatted(accountBid, customerBid));
             }
 
-            Transaction transaction = updateBalance(customerId, account, amount, CREDIT);
-            publisher.publishEvent(new CreditEvent(customerId, accountId, amount));
+            Transaction transaction = updateBalance(customerBid, account, amount, CREDIT);
+            publisher.publishEvent(new CreditEvent(customerBid, accountBid, amount));
 
             return transaction;
         } catch (Exception e) {
-            publisher.publishEvent(new CreditFailedEvent(customerId, accountId, e.getMessage(), amount));
+            publisher.publishEvent(new CreditFailedEvent(customerBid, accountBid, e.getMessage(), amount));
             throw e;
         }
     }
 
     @Transactional
     @Override
-    public Transaction debit(String customerId, String accountId, BigDecimal amount) {
+    public Transaction debit(String customerBid, String accountBid, BigDecimal amount) {
         try {
-            Account account = accountDao.findAndLockByBid(accountId)
+            Account account = accountDao.findAndLockByBid(accountBid)
                     .orElseThrow(() -> new EntityNotFoundException(
-                            FAILED_TO_FIND_OR_LOCK_ACCOUNT.formatted(accountId)));
+                            FAILED_TO_FIND_OR_LOCK_ACCOUNT.formatted(accountBid)));
 
-            if (!accountAccessControlService.canDebit(customerId, account)) {
+            if (!accountAccessControlService.canDebit(customerBid, account)) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        ACCOUNT_FOR_CUSTOMER_NOT_FOUND.formatted(accountId, customerId));
+                        ACCOUNT_FOR_CUSTOMER_NOT_FOUND.formatted(accountBid, customerBid));
             }
 
-            Transaction transaction = updateBalance(customerId, account, amount, DEBIT);
-            publisher.publishEvent(new DebitEvent(customerId, accountId, amount));
+            Transaction transaction = updateBalance(customerBid, account, amount, DEBIT);
+            publisher.publishEvent(new DebitEvent(customerBid, accountBid, amount));
 
             return transaction;
         } catch (Exception e) {
-            publisher.publishEvent(new DebitFailedEvent(customerId, accountId, e.getMessage(), amount));
+            publisher.publishEvent(new DebitFailedEvent(customerBid, accountBid, e.getMessage(), amount));
             throw e;
         }
     }
 
     @Transactional(readOnly = true)
     @Override
-    public BigDecimal balance(String customerId, String accountId) {
-        Account account = accountDao.findByBid(accountId)
+    public BigDecimal balance(String customerBid, String accountBid) {
+        Account account = accountDao.findByBid(accountBid)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        FAILED_TO_FIND_ACCOUNT.formatted(accountId)));
+                        FAILED_TO_FIND_ACCOUNT.formatted(accountBid)));
 
-        if (!accountAccessControlService.canReadBalance(customerId, account)) {
+        if (!accountAccessControlService.canReadBalance(customerBid, account)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    ACCOUNT_FOR_CUSTOMER_NOT_FOUND.formatted(accountId, customerId));
+                    ACCOUNT_FOR_CUSTOMER_NOT_FOUND.formatted(accountBid, customerBid));
         }
 
         return account.getBalance();
@@ -116,25 +116,26 @@ class DefaultTellerService implements TellerService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, List<Transaction>> findTransactions(String customerId, LocalDateTime from, LocalDateTime to) {
-        Customer customer = customerDao.findByBid(customerId)
-                .orElseThrow(() -> new EntityNotFoundException(FAILED_TO_FIND_CUSTOMER.formatted(customerId)));
+    public Map<String, List<Transaction>> findTransactions(String customerBid, LocalDateTime from, LocalDateTime to) {
+        Customer customer = customerDao.findByBid(customerBid)
+                .orElseThrow(() -> new EntityNotFoundException(FAILED_TO_FIND_CUSTOMER.formatted(customerBid)));
 
         return customer.getAccounts().stream()
                 .collect(Collectors.toMap(Account::getBid,
                         account -> transactionDao.findByAccountBidAndProcessedBetween(account.getBid(), from, to)));
     }
 
-    private Transaction updateBalance(String customerId, Account account, BigDecimal amount, TransactionDirection direction) {
-        account.setBalance(account.getBalance().add(direction == CREDIT ? amount : amount.negate()));
+    private Transaction updateBalance(String customerBid, Account account, BigDecimal amount,
+                                      TransactionType transactionType) {
+        account.setBalance(account.getBalance().add(transactionType == CREDIT ? amount : amount.negate()));
         accountDao.save(account);
 
         Transaction transaction = Transaction.Builder.builder()
                 .accountBid(account.getBid())
-                .userBid(customerId)
+                .userBid(customerBid)
                 .amount(amount)
                 .balance(account.getBalance())
-                .direction(direction)
+                .type(transactionType)
                 .processed(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
         return transactionDao.save(transaction);

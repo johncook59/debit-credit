@@ -16,7 +16,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import zarg.debitcredit.domain.TransactionDirection;
+import zarg.debitcredit.domain.TransactionType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -38,6 +38,9 @@ import static zarg.debitcredit.controllers.ControllerTestUtils.REGISTER_CUSTOMER
 @Testcontainers
 class TellerControllerTest {
 
+    public static final String TRANSACTION_URI = "/teller/%s/%s";
+    public static final String STATEMENT_URI = "/teller/%s/transactions";
+
     @Container
     @ServiceConnection
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
@@ -58,8 +61,8 @@ class TellerControllerTest {
     @Test
     public void shouldReadBalanceForOwnedAccount() throws Exception {
         CustomerDetails customer = createCustomer(OWNER);
-        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get("/teller/%s/%s/balance"
-                        .formatted(customer.bid(), customer.accounts().getFirst())))
+        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get(
+                        TRANSACTION_URI.formatted(customer.bid(), customer.accounts().getFirst())))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
 
@@ -72,26 +75,25 @@ class TellerControllerTest {
     public void shouldFailReadBalanceForAccountByAnotherCustomer() throws Exception {
         CustomerDetails owner = createCustomer(OWNER);
         CustomerDetails mal = createCustomer(NOT_OWNER);
-        this.mvc.perform(MockMvcRequestBuilders.get("/teller/%s/%s/balance"
-                        .formatted(mal.bid(), owner.accounts().getFirst())))
+        this.mvc.perform(MockMvcRequestBuilders.get(
+                        TRANSACTION_URI.formatted(mal.bid(), owner.accounts().getFirst())))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
     public void shouldCreditAccountWhenOwnerRequests() throws Exception {
-        CustomerDetails customer = createCustomer(OWNER);
-        String request = CREDIT_REQUEST.formatted(customer.accounts().getFirst());
-        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.put("/teller/%s/credit"
-                                .formatted(customer.bid()))
-                        .content(request)
+        CustomerDetails owner = createCustomer(OWNER);
+        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.put(
+                                TRANSACTION_URI.formatted(owner.bid(), owner.accounts().getFirst()))
+                        .content(CREDIT_REQUEST)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
 
         TransactionDetails transactionDetails = objectMapper.readValue(result.getResponse().getContentAsString(), TransactionDetails.class);
-        assertThat(transactionDetails.direction()).isEqualTo(TransactionDirection.CREDIT.name());
-        assertThat(transactionDetails.userId()).isEqualTo(customer.bid());
-        assertThat(transactionDetails.accountId()).isEqualTo(customer.accounts().getFirst());
+        assertThat(transactionDetails.type()).isEqualTo(TransactionType.CREDIT.name());
+        assertThat(transactionDetails.userId()).isEqualTo(owner.bid());
+        assertThat(transactionDetails.accountId()).isEqualTo(owner.accounts().getFirst());
         assertThat(transactionDetails.balance()).isEqualTo(new BigDecimal("11.00"));
         assertThat(transactionDetails.amount()).isEqualTo(new BigDecimal("1.00"));
     }
@@ -100,17 +102,16 @@ class TellerControllerTest {
     public void shouldCreditAccountWhenAnyoneRequests() throws Exception {
         CustomerDetails customer = createCustomer(OWNER);
         CustomerDetails anyone = createCustomer(NOT_OWNER);
-        String request = CREDIT_REQUEST.formatted(customer.accounts().getFirst());
 
-        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.put("/teller/%s/credit"
-                                .formatted(anyone.bid()))
-                        .content(request)
+        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.put(
+                                TRANSACTION_URI.formatted(anyone.bid(), customer.accounts().getFirst()))
+                        .content(CREDIT_REQUEST)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
 
         TransactionDetails transactionDetails = objectMapper.readValue(result.getResponse().getContentAsString(), TransactionDetails.class);
-        assertThat(transactionDetails.direction()).isEqualTo(TransactionDirection.CREDIT.name());
+        assertThat(transactionDetails.type()).isEqualTo(TransactionType.CREDIT.name());
         assertThat(transactionDetails.userId()).isEqualTo(anyone.bid());
         assertThat(transactionDetails.accountId()).isEqualTo(customer.accounts().getFirst());
         assertThat(transactionDetails.balance()).isEqualTo(new BigDecimal("11.00"));
@@ -121,15 +122,15 @@ class TellerControllerTest {
     public void shouldDebitAccountWhenOwnerRequests() throws Exception {
         CustomerDetails owner = createCustomer(OWNER);
 
-        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.put("/teller/%s/%s/debit"
-                                .formatted(owner.bid(), owner.accounts().getFirst()))
+        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.put(
+                                TRANSACTION_URI.formatted(owner.bid(), owner.accounts().getFirst()))
                         .content(DEBIT_REQUEST)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
 
         TransactionDetails transactionDetails = objectMapper.readValue(result.getResponse().getContentAsString(), TransactionDetails.class);
-        assertThat(transactionDetails.direction()).isEqualTo(TransactionDirection.DEBIT.name());
+        assertThat(transactionDetails.type()).isEqualTo(TransactionType.DEBIT.name());
         assertThat(transactionDetails.userId()).isEqualTo(owner.bid());
         assertThat(transactionDetails.accountId()).isEqualTo(owner.accounts().getFirst());
         assertThat(transactionDetails.balance()).isEqualTo(new BigDecimal("9.00"));
@@ -141,8 +142,8 @@ class TellerControllerTest {
         CustomerDetails owner = createCustomer(OWNER);
         CustomerDetails mal = createCustomer(NOT_OWNER);
 
-        this.mvc.perform(MockMvcRequestBuilders.put("/teller/%s/%s/debit"
-                                .formatted(mal.bid(), owner.accounts().getFirst()))
+        this.mvc.perform(MockMvcRequestBuilders.put(
+                                TRANSACTION_URI.formatted(mal.bid(), owner.accounts().getFirst()))
                         .content(DEBIT_REQUEST)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
@@ -151,16 +152,16 @@ class TellerControllerTest {
     @Test
     public void shouldFindTransactions() throws Exception {
         CustomerDetails owner = createCustomer(OWNER);
-        String request = CREDIT_REQUEST.formatted(owner.accounts().getFirst());
         this.mvc.perform(MockMvcRequestBuilders.put(
-                                String.format("/teller/%s/credit", owner.bid()))
-                        .content(request)
+                                TRANSACTION_URI.formatted(owner.bid(), owner.accounts().getFirst()))
+                        .content(CREDIT_REQUEST)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
 
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
-        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get("/teller/" + owner.bid() + "/transactions")
+        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get(STATEMENT_URI
+                                .formatted(owner.bid()))
                         .param("from", DATE_TIME_FORMATTER.format(now.minusDays(1)))
                         .param("to", DATE_TIME_FORMATTER.format(now)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -178,21 +179,20 @@ class TellerControllerTest {
         assertThat(transactions.get(expectedAccountId).getFirst().balance()).isEqualTo(new BigDecimal("11.00"));
         assertThat(transactions.get(expectedAccountId).getFirst().amount()).isEqualTo(new BigDecimal("1.00"));
         assertThat(transactions.get(expectedAccountId).getFirst().balance()).isEqualTo(new BigDecimal("11.00"));
-        assertThat(transactions.get(expectedAccountId).getFirst().direction()).isEqualTo(TransactionDirection.CREDIT.name());
+        assertThat(transactions.get(expectedAccountId).getFirst().type()).isEqualTo(TransactionType.CREDIT.name());
     }
 
     @Test
     public void shouldFindAllTransactions() throws Exception {
         CustomerDetails owner = createCustomer(OWNER);
-        String request = CREDIT_REQUEST.formatted(owner.accounts().getFirst());
         this.mvc.perform(MockMvcRequestBuilders.put(
-                                String.format("/teller/%s/credit", owner.bid()))
-                        .content(request)
+                                TRANSACTION_URI.formatted(owner.bid(), owner.accounts().getFirst()))
+                        .content(CREDIT_REQUEST)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
 
-        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get("/teller/" + owner.bid() + "/transactions"))
+        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get(STATEMENT_URI.formatted(owner.bid())))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
 
@@ -208,7 +208,7 @@ class TellerControllerTest {
         assertThat(transactions.get(expectedAccountId).getFirst().balance()).isEqualTo(new BigDecimal("11.00"));
         assertThat(transactions.get(expectedAccountId).getFirst().amount()).isEqualTo(new BigDecimal("1.00"));
         assertThat(transactions.get(expectedAccountId).getFirst().balance()).isEqualTo(new BigDecimal("11.00"));
-        assertThat(transactions.get(expectedAccountId).getFirst().direction()).isEqualTo(TransactionDirection.CREDIT.name());
+        assertThat(transactions.get(expectedAccountId).getFirst().type()).isEqualTo(TransactionType.CREDIT.name());
     }
 
     private CustomerDetails createCustomer(String name) throws Exception {

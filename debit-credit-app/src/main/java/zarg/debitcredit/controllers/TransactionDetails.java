@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 public record TransactionDetails(
         String id,
-        String direction,
+        String type,
         BigDecimal amount,
         BigDecimal balance,
         String userId,
@@ -17,7 +17,7 @@ public record TransactionDetails(
     public TransactionDetails(Transaction transaction) {
         this(
                 transaction.getBid(),
-                transaction.getDirection().name(),
+                transaction.getType().name(),
                 transaction.getAmount(),
                 transaction.getBalance(),
                 transaction.getUserBid(),
