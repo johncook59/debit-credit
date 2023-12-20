@@ -36,7 +36,8 @@ class TellerController {
         this.teller = teller;
     }
 
-    @GetMapping(value = "/{customerId}/{accountId}")
+    @GetMapping(value = "/{customerId}/{accountId}",
+            produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public BalanceDetails balance(@PathVariable("customerId") String customerBid,
                                   @PathVariable("accountId") String accountBid) {
@@ -44,7 +45,9 @@ class TellerController {
         return new BalanceDetails(accountBid, teller.balance(customerBid, accountBid));
     }
 
-    @PutMapping(value = "/{customerId}/{accountId}")
+    @PutMapping(value = "/{customerId}/{accountId}",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public TransactionDetails tellerTransaction(@PathVariable("customerId") String customerBid,
                                                 @PathVariable("accountId") String accountBid,

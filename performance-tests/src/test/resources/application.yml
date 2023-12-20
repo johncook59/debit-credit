@@ -3,7 +3,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
     open-in-view:
 
 #    properties:
@@ -11,8 +11,3 @@ spring:
 #        show_sql: true
 #        use_sql_comments: true
 #        format_sql: true
-
-
-
-
-
