@@ -11,21 +11,6 @@ A simple Spring Boot application with REST APIs to
 
 The application uses a Postgres database.
 
-#### performance tests
-This test suite uses Gatling to run calls to the `debit-credit-app` APIs. Source data sets simulate account sets that have
-- high contention accounts. A small number of accounts are repeatedly updated (via the debit or credit APIs) with the
-  potential for concurrent operations to overlap, and
-- high contention accounts. A large number of accounts are accessed, but where concurrency risk is lower.
-
-Earlier versions of this project used the Scala version of Gatling and implemented these from a separate project.
-The Gatling test are now implemented in Java and are to be found within the `test` folder of the debit-credit-app.
-
-Use this command to run the Gatling tests:
-```shell
-mvn gatling:test
-```
-
-
 ### loader
 Loader is a command line application that generates a randomised set of customer and account data and loads them to the `debit-credit-app` database.
 Data volumes are configurable by setting system properties:
@@ -40,6 +25,14 @@ This test suite uses Gatling to run calls to the `debit-credit-app` APIs. Source
 - high contention accounts. A small number of accounts are repeatedly updated (via the debit or credit APIs) with the
   potential for concurrent operations to overlap, and
 - high contention accounts. A large number of accounts are accessed, but where concurrency risk is lower.
+
+Earlier versions of this project used the Scala version of Gatling and implemented these from a separate project.
+The Gatling test are now implemented in Java and are to be found within the `test` folder of the debit-credit-app.
+
+Use this command to run the Gatling tests:
+```shell
+mvn gatling:test
+```
 
 ### terraform
 Builds the AWS infrastructure to host the `debit-credit-app`. By default, these terraform scripts use objects drawn from the AWS free tier,
