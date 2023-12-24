@@ -61,7 +61,7 @@ class TellerControllerTest {
     @Test
     public void shouldReadBalanceForOwnedAccount() throws Exception {
         CustomerDetails customer = createCustomer(OWNER);
-        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get(
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get(
                         TRANSACTION_URI.formatted(customer.bid(), customer.accounts().getFirst())))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
@@ -75,7 +75,7 @@ class TellerControllerTest {
     public void shouldFailReadBalanceForAccountByAnotherCustomer() throws Exception {
         CustomerDetails owner = createCustomer(OWNER);
         CustomerDetails mal = createCustomer(NOT_OWNER);
-        this.mvc.perform(MockMvcRequestBuilders.get(
+        mvc.perform(MockMvcRequestBuilders.get(
                         TRANSACTION_URI.formatted(mal.bid(), owner.accounts().getFirst())))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
@@ -83,7 +83,7 @@ class TellerControllerTest {
     @Test
     public void shouldCreditAccountWhenOwnerRequests() throws Exception {
         CustomerDetails owner = createCustomer(OWNER);
-        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.put(
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.put(
                                 TRANSACTION_URI.formatted(owner.bid(), owner.accounts().getFirst()))
                         .content(CREDIT_REQUEST)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -103,7 +103,7 @@ class TellerControllerTest {
         CustomerDetails customer = createCustomer(OWNER);
         CustomerDetails anyone = createCustomer(NOT_OWNER);
 
-        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.put(
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.put(
                                 TRANSACTION_URI.formatted(anyone.bid(), customer.accounts().getFirst()))
                         .content(CREDIT_REQUEST)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -122,7 +122,7 @@ class TellerControllerTest {
     public void shouldDebitAccountWhenOwnerRequests() throws Exception {
         CustomerDetails owner = createCustomer(OWNER);
 
-        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.put(
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.put(
                                 TRANSACTION_URI.formatted(owner.bid(), owner.accounts().getFirst()))
                         .content(DEBIT_REQUEST)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -142,7 +142,7 @@ class TellerControllerTest {
         CustomerDetails owner = createCustomer(OWNER);
         CustomerDetails mal = createCustomer(NOT_OWNER);
 
-        this.mvc.perform(MockMvcRequestBuilders.put(
+        mvc.perform(MockMvcRequestBuilders.put(
                                 TRANSACTION_URI.formatted(mal.bid(), owner.accounts().getFirst()))
                         .content(DEBIT_REQUEST)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -152,7 +152,7 @@ class TellerControllerTest {
     @Test
     public void shouldFindTransactions() throws Exception {
         CustomerDetails owner = createCustomer(OWNER);
-        this.mvc.perform(MockMvcRequestBuilders.put(
+        mvc.perform(MockMvcRequestBuilders.put(
                                 TRANSACTION_URI.formatted(owner.bid(), owner.accounts().getFirst()))
                         .content(CREDIT_REQUEST)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -160,7 +160,7 @@ class TellerControllerTest {
                 .andReturn();
 
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
-        MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get(STATEMENT_URI
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get(STATEMENT_URI
                                 .formatted(owner.bid()))
                         .param("from", DATE_TIME_FORMATTER.format(now.minusDays(1)))
                         .param("to", DATE_TIME_FORMATTER.format(now)))

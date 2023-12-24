@@ -119,6 +119,16 @@ CREATE SEQUENCE IF NOT EXISTS public.transaction_bid_seq
 ALTER SEQUENCE public.transaction_bid_seq
     OWNER TO postgres;
 
+CREATE SEQUENCE IF NOT EXISTS public.transaction_seq
+    INCREMENT 50
+    START 1
+    MINVALUE 1
+    MAXVALUE 2147483647
+    CACHE 1;
+
+ALTER SEQUENCE public.transaction_seq
+    OWNER TO postgres;
+
 CREATE TABLE IF NOT EXISTS public.transaction
 (
     id integer NOT NULL DEFAULT nextval('transaction_id_seq'::regclass),
