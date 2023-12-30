@@ -1,8 +1,21 @@
-FROM openjdk:21
+# First stage: JDK with GraalVM
+FROM container-registry.oracle.com/graalvm/native-image:21-ol8 AS builder
 
-MAINTAINER john@zarg.co.uk
+# Set the working directory to /home/app
+WORKDIR /build
 
-EXPOSE 8080
-VOLUME /tmp
-ADD target/debit-credit-app-1.0.2-SNAPSHOT.jar app.jar
-CMD ["java", "-jar", "-Drds.hostname=postgres:5432", "/app.jar"]
+# Copy the source code into the image for building
+COPY . /build
+
+RUN ./mvnw -Pnative -DskipTests native:compile
+
+# Second stage:
+FROM container-registry.oracle.com/os/oraclelinux:8-slim
+
+WORKDIR /app
+
+# Copy the native binary from the build stage
+COPY --from=builder build/target/debit-credit-app /app/debit-credit-app
+
+# Run the application
+ENTRYPOINT ["/app/debit-credit-app"]

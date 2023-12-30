@@ -17,8 +17,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Generated;
-import org.hibernate.generator.EventType;
 
 import java.util.List;
 
@@ -40,7 +38,7 @@ public class Customer {
     @Column(name = "bid", length = 12, updatable = false, insertable = false)
     @SequenceGenerator(name = "customer_bid_seq", allocationSize = 1)
     @ColumnDefault("concat('C', lpad(nextval('customer_bid_seq'::regclass)::text, 8, '0'))")
-    @Generated(event = EventType.INSERT)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private String bid;
 
     @Version

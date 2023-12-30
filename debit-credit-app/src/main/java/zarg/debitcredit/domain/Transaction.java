@@ -12,8 +12,6 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Generated;
-import org.hibernate.generator.EventType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -33,7 +31,7 @@ public class Transaction {
     @Column(name = "bid", length = 12, updatable = false, insertable = false)
     @SequenceGenerator(name = "transaction_bid_seq", allocationSize = 1)
     @ColumnDefault("concat('T', lpad(nextval('transaction_bid_seq'::regclass)::text, 10, '0'))")
-    @Generated(event = EventType.INSERT)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private String bid;
 
     @Column(name = "user_bid", length = 12, nullable = false)

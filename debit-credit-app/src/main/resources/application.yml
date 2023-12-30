@@ -6,6 +6,7 @@ spring:
     password: ${rds.password}
     initialization-mode: always
   jpa:
+    defer-datasource-initialization: true
     hibernate:
       ddl-auto: none
     open-in-view: false
@@ -14,9 +15,15 @@ spring:
         show_sql: false
         use_sql_comments: true
         format_sql: true
-
+  sql:
+    init:
+      mode: always
+hibernate:
+  dialect: org.hibernate.dialect.PostgreSQLDialect
+  connection:
+    url: jdbc:postgresql://${rds.hostname}/${rds.db_name}?stringtype=unspecified
 rds:
-  hostname: localhost:5432
+  hostname: postgres:5432
   username: postgres
   password: letmein
   db_name: debit_credit
