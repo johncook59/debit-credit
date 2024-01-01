@@ -13,16 +13,16 @@ class DefaultAccountAccessControlService implements AccountAccessControlService 
     }
 
     @Override
-    public boolean canDebit(String customerId, Account account) {
-        return isCustomerAccountOwner(customerId, account);
+    public boolean canDebit(String customerBid, Account account) {
+        return isCustomerAccountOwner(customerBid, account);
     }
 
     @Override
-    public boolean canReadBalance(String customerId, Account account) {
-        return isCustomerAccountOwner(customerId, account);
+    public boolean canReadBalance(String customerBid, Account account) {
+        return isCustomerAccountOwner(customerBid, account);
     }
 
-    private boolean isCustomerAccountOwner(String customerId, Account account) {
-        return customerService.isAccountOwner(customerId, account.getBid());
+    private boolean isCustomerAccountOwner(String customerBid, Account account) {
+        return customerService.isAccountOwner(customerBid, account.getBid());
     }
 }

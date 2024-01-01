@@ -10,10 +10,7 @@
         </layout>
     </appender>
 
-    <logger name="org.springframework.web" level="WARN"/>
-    <logger name="zarg.debitcredit" level="DEBUG"/>
-
-    <root level="INFO">
+    <root level="WARN">
         <appender-ref ref="Console"/>
     </root>
 

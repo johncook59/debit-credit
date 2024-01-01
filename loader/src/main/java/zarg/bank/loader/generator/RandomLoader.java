@@ -25,17 +25,25 @@ import java.util.stream.Collectors;
 @Component
 @ConditionalOnProperty(prefix = "generator", name = "type", havingValue = "data", matchIfMissing = true)
 @Slf4j
-public class RandomLoader implements Loader {
+class RandomLoader implements Loader {
 
-    private static final String INSERT_CUSTOMER_SQL = "INSERT INTO public.customer(" +
-            "   given_name, surname, password, email_address, version)" +
-            "   VALUES (?, ?, 'letmein', ?, 0)";
-    private static final String INSERT_ACCOUNT_SQL = "INSERT INTO public.account(" +
-            "   balance, name, version)" +
-            "   VALUES (10, 'Test Account', 0)";
-    private static final String INSERT_CUSTOMER_ACCOUNT_SQL = "INSERT INTO public.customer_account(" +
-            "   customer_id, account_id)" +
-            "   VALUES (?, ?)";
+    private static final String INSERT_CUSTOMER_SQL = """
+            INSERT INTO public.customer(
+               given_name, surname, password, email_address, version)
+               VALUES (?, ?, 'letmein', ?, 0)
+               RETURNING id
+               """;
+    private static final String INSERT_ACCOUNT_SQL = """
+            INSERT INTO public.account(
+                balance, name, version)
+                VALUES (10, 'Test Account', 0)
+                RETURNING id
+            """;
+    private static final String INSERT_CUSTOMER_ACCOUNT_SQL = """
+            INSERT INTO public.customer_account(
+               customer_id, account_id)
+               VALUES (?, ?)
+               """;
 
     private final DataSource dataSource;
 
@@ -47,12 +55,12 @@ public class RandomLoader implements Loader {
     private final long count;
     private final long batch;
 
-    public RandomLoader(DataSource dataSource,
-                        @Value("${customer.data:classpath:forename.txt}") Resource forenameResource,
-                        @Value("${customer.data:classpath:surname.txt}") Resource surnameResource,
-                        @Value("${customer.data:classpath:domain.txt}") Resource domainResource,
-                        @Value("${customer.count:1000000}") long count,
-                        @Value("${customer.batch:10000}") long batch) {
+    RandomLoader(DataSource dataSource,
+                 @Value("${customer.data:classpath:forename.txt}") Resource forenameResource,
+                 @Value("${customer.data:classpath:surname.txt}") Resource surnameResource,
+                 @Value("${customer.data:classpath:domain.txt}") Resource domainResource,
+                 @Value("${customer.count:1000000}") long count,
+                 @Value("${customer.batch:10000}") long batch) {
         this.dataSource = dataSource;
         this.forenames = new ArrayList<>(loadNameSet(forenameResource));
         this.surnames = new ArrayList<>(loadNameSet(surnameResource));
@@ -73,7 +81,7 @@ public class RandomLoader implements Loader {
         long remaining = count;
         while (remaining > 0) {
             long batchCount = Math.min(remaining, batch);
-            remaining = (remaining - batch) > 0? remaining - batch : 0;
+            remaining = (remaining - batch) > 0 ? remaining - batch : 0;
             log.info("loading {} of {}. {} remaining", batchCount, count, remaining);
             loadBatch(batchCount);
         }
@@ -93,9 +101,9 @@ public class RandomLoader implements Loader {
         try (PreparedStatement statement = connection.prepareStatement(INSERT_CUSTOMER_SQL, Statement.RETURN_GENERATED_KEYS)) {
             for (int i = 0; i < batchSize; i++) {
                 Person person = createPerson();
-                statement.setString(1, person.getGivenName());
-                statement.setString(2, person.getSurname());
-                statement.setString(3, person.getEmailAddress());
+                statement.setString(1, person.givenName());
+                statement.setString(2, person.surname());
+                statement.setString(3, person.emailAddress());
                 statement.addBatch();
             }
             statement.executeBatch();
@@ -145,7 +153,7 @@ public class RandomLoader implements Loader {
     private Person createPerson() {
         String givenName = forenames.get(random.nextInt(forenames.size()));
         String surname = surnames.get(random.nextInt(surnames.size()));
-        return Person.builder()
+        return Person.Builder.builder()
                 .givenName(givenName)
                 .surname(surname)
                 .emailAddress(createEmailAddress(givenName, surname))

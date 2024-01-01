@@ -1,7 +1,6 @@
 package zarg.bank.loader;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -11,10 +10,13 @@ import zarg.bank.loader.generator.Loader;
 
 @SpringBootApplication()
 @Slf4j
-public class LoaderApplication implements CommandLineRunner {
+class LoaderApplication implements CommandLineRunner {
 
-    @Autowired
-    private ApplicationContext applicationContext;
+    private final ApplicationContext applicationContext;
+
+    public LoaderApplication(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
 
     public static void main(String[] args) {
         new SpringApplicationBuilder(LoaderApplication.class)
@@ -24,7 +26,8 @@ public class LoaderApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        Loader loader = applicationContext.getBean(Loader.class);
-        loader.loadData();
+        applicationContext
+                .getBean(Loader.class)
+                .loadData();
     }
 }

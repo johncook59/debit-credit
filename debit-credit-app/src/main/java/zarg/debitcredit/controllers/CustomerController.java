@@ -1,6 +1,7 @@
 package zarg.debitcredit.controllers;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,8 +15,9 @@ import zarg.debitcredit.service.CustomerService;
 
 @RestController
 @RequestMapping("customer")
-@Slf4j
 public class CustomerController {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final CustomerService customerService;
 
@@ -35,7 +37,7 @@ public class CustomerController {
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public CustomerDetails register(@RequestBody RegisterCustomerRequest request) {
-        log.info("Registering {} {}", request.getGivenName(), request.getSurname());
+        log.info("Registering {} {}", request.givenName(), request.surname());
 
         return new CustomerDetails(customerService.registerCustomer(request));
     }

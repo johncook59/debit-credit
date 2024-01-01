@@ -1,14 +1,16 @@
 package zarg.debitcredit.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
 @Configuration
-public class RequestLoggingFilterConfig {
+class RequestLoggingFilterConfig {
 
     @Bean
-    public CommonsRequestLoggingFilter logFilter() {
+    @ConditionalOnProperty(name = "log.requests", havingValue = "true")
+    CommonsRequestLoggingFilter logFilter() {
         CommonsRequestLoggingFilter filter
                 = new CommonsRequestLoggingFilter();
         filter.setIncludeQueryString(true);
