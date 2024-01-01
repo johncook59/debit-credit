@@ -28,11 +28,6 @@ services:
       mode: replicated
       replicas: 4
       endpoint_mode: vip
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
     healthcheck:
       test: "curl --fail --silent localhost:8080/actuator/health | grep UP || exit 1"
       interval: 10s
